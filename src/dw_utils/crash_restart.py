@@ -39,8 +39,7 @@ def crash_restart(rerun_delay, rerun_max=-1, before_func=None, after_func=None, 
     def inner(original_func):
         @wraps(original_func)
         def wrapper(*args, **kwargs):
-            if print_func is not None and exc_func is None:
-                orig_name = original_func.__name__
+            orig_name = original_func.__name__
             _rerun_max = int(rerun_max)
             if _rerun_max < 0:
                 rerun_count = _rerun_max
@@ -112,8 +111,7 @@ def crash_restart_async(rerun_delay, rerun_max=-1, before_func=None, after_func=
     def inner(original_func):
         @wraps(original_func)
         async def wrapper(*args, **kwargs):
-            if print_func is not None and exc_func is None:
-                orig_name = original_func.__name__
+            orig_name = original_func.__name__
             _rerun_max = int(rerun_max)
             if _rerun_max < 0:
                 rerun_count = _rerun_max
