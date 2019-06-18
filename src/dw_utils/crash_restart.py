@@ -23,8 +23,8 @@ def crash_restart(rerun_delay, rerun_max=-1, before_func=None, after_func=None, 
         rerun_delay {number} -- Number of seconds to wait after an exception
             before starting the function again.
         rerun_max {int} -- Number of times the function should be attempted
-            before it is not run again and crash_restart will return None.
-            (default: {-1})
+            before it is not run again and crash_restart will return None. A
+            negative rerun_max value indicates unlimited runs. (default: {-1})
         before_func {func()} -- Func to call before wrapped func (default: {None})
         after_func {func()} -- Func to call after wrapped func (default: {None})
         exc_func {func(exc)} -- Func to call on exception (default: {None})
