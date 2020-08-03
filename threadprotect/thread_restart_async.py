@@ -1,14 +1,15 @@
+import asyncio
 import time
 from functools import wraps
 
 
-def crash_restart(rerun_delay, rerun_max=-1, before_func=None, after_func=None, exc_func=None, print_func=print):
-    """Add restart-on-crash behavior to a function, intended to be run as its own thread.
+def thread_restart_async(rerun_delay, rerun_max=-1, before_func=None, after_func=None, exc_func=None, print_func=print):
+    """Add restart-on-crash behavior to an async function.
 
     Wraps a funtion such that it will be re-ran if it ends due to an
     exception. If no exception is raised, the function will complete normally.
 
-    Before/after/exc parameters allow you to set functions that should be called
+    before/after/exc parameters allow you to set functions that should be called
     before the first function run, after the last function run, or be called if
     the wrapped function raises an exception.
 
@@ -37,7 +38,7 @@ def crash_restart(rerun_delay, rerun_max=-1, before_func=None, after_func=None, 
     """
     def inner(original_func):
         @wraps(original_func)
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             orig_name = original_func.__name__
             _rerun_max = int(rerun_max)
             if _rerun_max < 0:
@@ -50,19 +51,22 @@ def crash_restart(rerun_delay, rerun_max=-1, before_func=None, after_func=None, 
             elif print_func is not None:
                 print_func("Starting func: " + orig_name)
 
-            while _rerun_max < 0 or rerun_count < _rerun_max:
+            func_future = original_func(*args, **kwargs)
+            while func_future is not None:
                 try:
-                    if rerun_count < _rerun_max:
-                        rerun_count += 1
-                    result = original_func(*args, **kwargs)
-                    break
+                    if _rerun_max < 0 or rerun_count < _rerun_max:
+                        if rerun_count != _rerun_max:
+                            rerun_count += 1
+                        result = await func_future
+                    func_future = None
                 except Exception as e:
                     result = None
                     if exc_func is not None:
                         exc_func(e)
                     elif print_func is not None:
                         print_func("Caught exception in func " + orig_name + ": " + str(e))
-                    time.sleep(rerun_delay)
+                    await asyncio.sleep(rerun_delay)
+                    func_future = original_func(*args, **kwargs)
 
             if after_func is not None:
                 after_func()
